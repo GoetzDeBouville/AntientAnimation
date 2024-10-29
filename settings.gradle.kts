@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "AntientAnimation"
 include(":app")
- 
+include(":uikit")

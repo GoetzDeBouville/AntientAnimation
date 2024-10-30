@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-10-29T20:30:52.005797Z">
+        <DropdownSelection timestamp="2024-10-30T15:25:20.674670Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=/Users/tlsrdtv/.android/avd/Pixel_8_API_34.avd" />

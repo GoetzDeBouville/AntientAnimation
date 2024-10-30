@@ -4,11 +4,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.zinchenkodev.antientanimation.models.Event
+import org.zinchenkodev.antientanimation.models.State
 import org.zinchenkodev.antientanimation.ui.uikit.iconresources.ActionBackIcon
 import org.zinchenkodev.antientanimation.ui.uikit.iconresources.ActionForwardIcon
 import org.zinchenkodev.antientanimation.ui.uikit.iconresources.AddFileIcon
@@ -19,14 +22,23 @@ import org.zinchenkodev.antientanimation.ui.uikit.iconresources.PlayIcon
 
 
 @Composable
-fun Header(modifier: Modifier = Modifier) {
+fun Header(
+    modifier: Modifier = Modifier,
+    state: State = State(),
+    onAction: (Event) -> Unit = {}
+) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = ActionBackIcon,
-            contentDescription = null
+            contentDescription = null,
+            tint = if (state.lineList.isNotEmpty() || state.pointerList.isNotEmpty()) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
         )
         Icon(
             modifier = Modifier.padding(start = 8.dp),

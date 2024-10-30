@@ -1,4 +1,4 @@
-package org.zinchenkodev.antientanimation.ui.uikit
+package org.zinchenkodev.antientanimation.ui.uikit.iconresources
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 import kotlin.Suppress
 
-val EraseIc32: ImageVector
+val EraseIcon: ImageVector
     get() {
         if (_EraseIc32 != null) {
             return _EraseIc32!!

@@ -1,4 +1,4 @@
-package org.zinchenkodev.antientanimation.ui.uikit
+package org.zinchenkodev.antientanimation.ui.uikit.iconresources
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -9,12 +9,12 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 import kotlin.Suppress
 
-val ActionForwardIcon: ImageVector
+val ActionBackIcon: ImageVector
     get() {
-        if (_ActionForwardIc24 != null) {
-            return _ActionForwardIc24!!
+        if (_ActionBackIcon != null) {
+            return _ActionBackIcon!!
         }
-        _ActionForwardIc24 = ImageVector.Builder(
+        _ActionBackIcon = ImageVector.Builder(
             name = "ActionForwardIc24",
             defaultWidth = 25.dp,
             defaultHeight = 24.dp,
@@ -45,8 +45,8 @@ val ActionForwardIcon: ImageVector
             }
         }.build()
 
-        return _ActionForwardIc24!!
+        return _ActionBackIcon!!
     }
 
 @Suppress("ObjectPropertyName")
-private var _ActionForwardIc24: ImageVector? = null
+private var _ActionBackIcon: ImageVector? = null

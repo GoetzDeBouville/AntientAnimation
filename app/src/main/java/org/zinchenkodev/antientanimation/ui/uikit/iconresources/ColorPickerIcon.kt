@@ -1,4 +1,4 @@
-package org.zinchenkodev.antientanimation.ui.uikit
+package org.zinchenkodev.antientanimation.ui.uikit.iconresources
 
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable

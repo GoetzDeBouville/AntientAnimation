@@ -208,18 +208,11 @@ class MainViewModel @Inject constructor() : ViewModel() {
 
             is Event.OnColorChanged -> {
                 _state.update { currentState ->
-                    Log.i(
-                        "TAG",
-                        "OnColorChanged Updating color from ${currentState.strokeColor} to ${event.color}"
-                    )
                     currentState.copy(
-                        strokeColor = event.color
+                        strokeColor = event.color,
+                        selectedTool = Tool.Pen(event.color)
                     )
                 }
-
-                Log.i("TAG", "OnColorChanged state.color = ${_state.value.strokeColor}")
-                Log.i("TAG", "OnColorChanged state.value = ${state.value}")
-
             }
 
             is Event.OnCreateNewFrameClicked -> {
@@ -257,7 +250,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
                                     lineList = frame.second
                                 )
                             }
-                            delay(1000)
+                            delay(500)
                         }
                     }
                 }
@@ -266,7 +259,9 @@ class MainViewModel @Inject constructor() : ViewModel() {
             is Event.OnPauseClicked -> {
                 _state.update {
                     it.copy(
-                        onPlay = false
+                        onPlay = false,
+                        pointerList = emptyList(),
+                        lineList = emptyList()
                     )
                 }
             }

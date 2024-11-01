@@ -91,7 +91,7 @@ fun Body(
         ) {
             state.lineList.forEach { line ->
                 drawLine(
-                    color = state.strokeColor,
+                    color = line.color,
                     start = line.startDrawing.toOffset(),
                     end = line.endDrawing.toOffset(),
                     strokeWidth = state.strokeWidth.toPx()
@@ -101,7 +101,7 @@ fun Body(
             state.pointerList.forEach { point ->
                 drawCircle(
                     color = point.color,
-                    radius = (state.strokeWidth).toPx(),
+                    radius = (state.strokeWidth / 2).toPx(),
                     center = point.offset.toOffset(),
                     style = Fill
                 )
@@ -110,7 +110,7 @@ fun Body(
                 state.frameList[previousFrameNumber].first.forEach { point ->
                     drawCircle(
                         color = point.color.copy(alpha = 0.3f),
-                        radius = (state.strokeWidth).toPx(),
+                        radius = (state.strokeWidth / 2).toPx(),
                         center = point.offset.toOffset(),
                         style = Fill
                     )

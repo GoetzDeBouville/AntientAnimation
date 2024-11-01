@@ -66,7 +66,7 @@ fun Header(
                     onAction(Event.OnPauseClicked)
                 }
         )
-        val isActivePlay = state.onPlay.not() && state.frameList.size > 2
+        val isActivePlay = state.onPlay.not() && state.frameList.size > 1
 
         Image(
             modifier = Modifier

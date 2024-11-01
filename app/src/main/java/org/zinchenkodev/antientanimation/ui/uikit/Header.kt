@@ -58,13 +58,23 @@ fun Header(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Icon(
-            imageVector = PauseIcon,
-            contentDescription = null
+        Image(
+            imageVector = PauseIcon(state.onPlay),
+            contentDescription = null,
+            modifier = Modifier
+                .clickable {
+                    onAction(Event.OnPauseClicked)
+                }
         )
-        Icon(
-            modifier = Modifier.padding(start = 16.dp),
-            imageVector = PlayIcon,
+        val isActivePlay = state.onPlay.not() && state.frameList.size > 2
+
+        Image(
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .clickable {
+                    onAction(Event.OnPlayClicked)
+                },
+            imageVector = PlayIcon(isActivePlay),
             contentDescription = null
         )
     }

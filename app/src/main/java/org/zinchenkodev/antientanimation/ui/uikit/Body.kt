@@ -106,7 +106,7 @@ fun Body(
                     style = Fill
                 )
             }
-            if (previousFrameNumber >= 0) {
+            if (previousFrameNumber >= 0 && state.onPlay.not()) {
                 state.frameList[previousFrameNumber].first.forEach { point ->
                     drawCircle(
                         color = point.color.copy(alpha = 0.3f),

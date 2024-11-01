@@ -5,10 +5,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.toOffset
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import org.zinchenkodev.antientanimation.models.Event
 import org.zinchenkodev.antientanimation.models.Line
 import org.zinchenkodev.antientanimation.models.Point
@@ -23,6 +26,10 @@ class MainViewModel @Inject constructor() : ViewModel() {
     private val _state = MutableStateFlow(State())
     val state
         get() = _state.asStateFlow()
+
+    init {
+
+    }
 
     @Suppress("t")
     fun accept(event: Event) {
@@ -201,7 +208,10 @@ class MainViewModel @Inject constructor() : ViewModel() {
 
             is Event.OnColorChanged -> {
                 _state.update { currentState ->
-                    Log.i("TAG", "OnColorChanged Updating color from ${currentState.strokeColor} to ${event.color}")
+                    Log.i(
+                        "TAG",
+                        "OnColorChanged Updating color from ${currentState.strokeColor} to ${event.color}"
+                    )
                     currentState.copy(
                         strokeColor = event.color
                     )
@@ -224,6 +234,39 @@ class MainViewModel @Inject constructor() : ViewModel() {
                         lineList = emptyList(),
                         frameList = frameList,
                         frameNumber = frameList.size + 1
+                    )
+                }
+            }
+
+            is Event.OnPlayClicked -> {
+                _state.update {
+                    it.copy(
+                        onPlay = true
+                    )
+                }
+
+                viewModelScope.launch {
+                    while (_state.value.onPlay) {
+                        for (frame in _state.value.frameList) {
+                            if (_state.value.onPlay.not()) {
+                                break
+                            }
+                            _state.update {
+                                it.copy(
+                                    pointerList = frame.first,
+                                    lineList = frame.second
+                                )
+                            }
+                            delay(1000)
+                        }
+                    }
+                }
+            }
+
+            is Event.OnPauseClicked -> {
+                _state.update {
+                    it.copy(
+                        onPlay = false
                     )
                 }
             }
@@ -351,6 +394,15 @@ class MainViewModel @Inject constructor() : ViewModel() {
         val y = (point1.y - point2.y).toFloat()
 
         return sqrt(x * x + y * y)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        _state.update {
+            it.copy(
+                onPlay = false
+            )
+        }
     }
 
     companion object {

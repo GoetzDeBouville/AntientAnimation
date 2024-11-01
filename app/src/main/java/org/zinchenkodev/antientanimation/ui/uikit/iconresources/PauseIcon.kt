@@ -1,24 +1,31 @@
 package org.zinchenkodev.antientanimation.ui.uikit.iconresources
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
+import org.zinchenkodev.antientanimation.ui.theme.Gray
 
-val PauseIcon: ImageVector
-    get() {
-        if (_PauseIc32 != null) {
-            return _PauseIc32!!
+@Composable
+fun PauseIcon(isActive: Boolean): ImageVector {
+    return remember(isActive) {
+        val color = if (isActive) {
+            Color(0xFFFFFFFF)
+        } else {
+            Gray
         }
-        _PauseIc32 = ImageVector.Builder(
+
+        ImageVector.Builder(
             name = "PauseIc32",
             defaultWidth = 33.dp,
             defaultHeight = 33.dp,
             viewportWidth = 33f,
             viewportHeight = 33f
         ).apply {
-            path(fill = SolidColor(Color(0xFFFFFFFF))) {
+            path(fill = SolidColor(color)) {
                 moveTo(13f, 4.75f)
                 horizontalLineTo(11.5f)
                 curveTo(11.086f, 4.75f, 10.75f, 5.518f, 10.75f, 6.464f)
@@ -30,7 +37,7 @@ val PauseIcon: ImageVector
                 curveTo(13.75f, 5.518f, 13.414f, 4.75f, 13f, 4.75f)
                 close()
             }
-            path(fill = SolidColor(Color(0xFFFFFFFF))) {
+            path(fill = SolidColor(color)) {
                 moveTo(21f, 4.75f)
                 horizontalLineTo(19.5f)
                 curveTo(19.086f, 4.75f, 18.75f, 5.518f, 18.75f, 6.464f)
@@ -43,9 +50,5 @@ val PauseIcon: ImageVector
                 close()
             }
         }.build()
-
-        return _PauseIc32!!
     }
-
-@Suppress("ObjectPropertyName")
-private var _PauseIc32: ImageVector? = null
+}

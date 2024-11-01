@@ -1,24 +1,31 @@
 package org.zinchenkodev.antientanimation.ui.uikit.iconresources
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
+import org.zinchenkodev.antientanimation.ui.theme.Gray
 
-val PlayIcon: ImageVector
-    get() {
-        if (_PlayIc32 != null) {
-            return _PlayIc32!!
+@Composable
+fun PlayIcon(isActive: Boolean) : ImageVector {
+    return remember(isActive) {
+        val color = if (isActive) {
+            Color(0xFFFFFFFF)
+        } else {
+            Gray
         }
-        _PlayIc32 = ImageVector.Builder(
+
+        ImageVector.Builder(
             name = "PlayIc32",
             defaultWidth = 32.dp,
             defaultHeight = 32.dp,
             viewportWidth = 32f,
             viewportHeight = 32f
         ).apply {
-            path(fill = SolidColor(Color(0xFFFFFFFF))) {
+            path(fill = SolidColor(color)) {
                 moveTo(7.024f, 6.152f)
                 verticalLineTo(25.843f)
                 curveTo(7.026f, 26.247f, 7.14f, 26.642f, 7.354f, 26.984f)
@@ -38,10 +45,5 @@ val PlayIcon: ImageVector
                 close()
             }
         }.build()
-
-        return _PlayIc32!!
     }
-
-@Suppress("ObjectPropertyName")
-private var _PlayIc32: ImageVector? = null
-
+}

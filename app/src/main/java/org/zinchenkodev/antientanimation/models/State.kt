@@ -20,5 +20,6 @@ data class State(
     val currentLineNumber: Int = linesNumber,
     val backAction: List<Pair<Tool, List<IntOffset>>> = emptyList(),
     val nextAction: List<Pair<Tool, List<IntOffset>>> = emptyList(),
-    val colorPickerIsActive: Boolean = false
+    val colorPickerIsActive: Boolean = false,
+    val onPlay: Boolean = false
 )

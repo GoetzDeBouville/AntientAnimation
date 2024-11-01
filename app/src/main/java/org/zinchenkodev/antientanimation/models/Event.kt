@@ -7,9 +7,7 @@ sealed interface Event {
     class OnToolClick(val tool: Tool) : Event
     class OnDrawLine(val start: Offset, val end: Offset, val color: Color) : Event
     data object OnDragEnd : Event
-    class OnDrawPoint(val point: Offset, val color: Color) : Event
     class OnEraseLine(val start: Offset, val end: Offset) : Event
-    class OnErasePoint(val point: Offset) : Event
     data object OnBackIconClicked : Event
     data object OnForwardIconClicked : Event
     data object OnEraserClicked: Event

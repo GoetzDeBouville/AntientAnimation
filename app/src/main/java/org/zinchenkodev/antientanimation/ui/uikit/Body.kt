@@ -1,6 +1,5 @@
 package org.zinchenkodev.antientanimation.ui.uikit
 
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -14,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -53,7 +51,6 @@ fun Body(
                                         state.strokeColor
                                     )
                                 )
-                                Log.i("TAG", "OnDrawLine state.strokeColor = ${state.strokeColor}")
                             }
 
                             is Tool.Eraser -> onAction(
@@ -70,7 +67,19 @@ fun Body(
                 detectTapGestures { offset ->
                     when (state.selectedTool) {
                         is Tool.Pen -> {
-                            onAction(Event.OnDrawPoint(offset, state.strokeColor))
+                            onAction(
+                                Event.OnDrawLine(
+                                    start = offset.copy(
+                                        x = offset.x - (state.strokeWidth / 3).toPx(),
+                                        y = offset.y - (state.strokeWidth / 2).toPx()
+                                    ),
+                                    end = offset.copy(
+                                        x = offset.x + (state.strokeWidth / 3).toPx(),
+                                        y = offset.y + (state.strokeWidth / 2).toPx()
+                                    ),
+                                    state.strokeColor
+                                )
+                            )
                         }
 
                         is Tool.Eraser -> onAction(Event.OnEraseLine(offset, offset))
@@ -79,7 +88,7 @@ fun Body(
             },
         shape = RoundedCornerShape(20.dp)
     ) {
-        val previousFrameNumber = state.frameNumber - 2
+        val previousFrameNumber = state.frameList.size - 1
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
@@ -98,27 +107,10 @@ fun Body(
                 )
             }
 
-            state.pointerList.forEach { point ->
-                drawCircle(
-                    color = point.color,
-                    radius = (state.strokeWidth / 2).toPx(),
-                    center = point.offset.toOffset(),
-                    style = Fill
-                )
-            }
             if (previousFrameNumber >= 0 && state.onPlay.not()) {
-                state.frameList[previousFrameNumber].first.forEach { point ->
-                    drawCircle(
-                        color = point.color.copy(alpha = 0.3f),
-                        radius = (state.strokeWidth / 2).toPx(),
-                        center = point.offset.toOffset(),
-                        style = Fill
-                    )
-                }
-
-                state.frameList[previousFrameNumber].second.forEach { line ->
+                state.frameList[previousFrameNumber].forEach { line ->
                     drawLine(
-                        color = line.color.copy(0.3f),
+                        color = line.color.copy(0.1f),
                         start = line.startDrawing.toOffset(),
                         end = line.endDrawing.toOffset(),
                         strokeWidth = state.strokeWidth.toPx()

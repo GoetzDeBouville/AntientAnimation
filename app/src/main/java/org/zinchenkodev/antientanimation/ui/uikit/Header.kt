@@ -1,6 +1,5 @@
 package org.zinchenkodev.antientanimation.ui.uikit
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
@@ -34,25 +33,28 @@ fun Header(
     ) {
         Image(
             modifier = Modifier.clickable {
-                Log.i("Header", "Back icon clicked")
-                onAction(Event.OnBackIconClicked)
+                if (state.lineList.isNotEmpty() && state.onPlay.not()) {
+                    onAction(Event.OnBackIconClicked)
+                }
             },
-            imageVector = ActionBackIcon(state.backAction.isNotEmpty()),
+            imageVector = ActionBackIcon(state.lineList.isNotEmpty() && state.onPlay.not()),
             contentDescription = null
         )
         Image(
             modifier = Modifier
                 .padding(start = 8.dp)
                 .clickable {
-                    Log.i("Header", "Back icon clicked")
-                    onAction(Event.OnForwardIconClicked)
+                    if (state.forwardAction.isNotEmpty() && state.onPlay.not()) {
+                        onAction(Event.OnForwardIconClicked)
+                    }
                 },
-            imageVector = ActionForwardIcon(state.nextAction.isNotEmpty()),
+            imageVector = ActionForwardIcon(state.forwardAction.isNotEmpty() && state.onPlay.not()),
             contentDescription = null
         )
         Spacer(modifier = Modifier.weight(1f))
 
         CentralElements(
+            state = state,
             onAction = onAction
         )
 
@@ -72,7 +74,9 @@ fun Header(
             modifier = Modifier
                 .padding(start = 16.dp)
                 .clickable {
-                    onAction(Event.OnPlayClicked)
+                    if (isActivePlay) {
+                        onAction(Event.OnPlayClicked)
+                    }
                 },
             imageVector = PlayIcon(isActivePlay),
             contentDescription = null
@@ -82,6 +86,7 @@ fun Header(
 
 @Composable
 private fun CentralElements(
+    state: State = State(),
     modifier: Modifier = Modifier,
     onAction: (Event) -> Unit = {}
 ) {
@@ -89,7 +94,9 @@ private fun CentralElements(
         Icon(
             modifier = Modifier
                 .clickable {
-                    onAction(Event.OnClearFrameClicked)
+                    if (state.onPlay.not()) {
+                        onAction(Event.OnClearFrameClicked)
+                    }
                 },
             imageVector = BinIcon,
             contentDescription = null
@@ -100,7 +107,9 @@ private fun CentralElements(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .clickable {
-                    onAction(Event.OnCreateNewFrameClicked)
+                    if (state.onPlay.not()) {
+                        onAction(Event.OnCreateNewFrameClicked)
+                    }
                 }
         )
         Icon(

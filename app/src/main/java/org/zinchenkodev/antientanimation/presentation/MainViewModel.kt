@@ -1,6 +1,9 @@
 package org.zinchenkodev.antientanimation.presentation
 
+import android.util.Log
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.toOffset
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,9 +11,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.zinchenkodev.antientanimation.models.Event
 import org.zinchenkodev.antientanimation.models.Line
+import org.zinchenkodev.antientanimation.models.Point
 import org.zinchenkodev.antientanimation.models.State
 import org.zinchenkodev.antientanimation.models.Tool
-import org.zinchenkodev.antientanimation.utils.toIntOffset
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -30,9 +33,11 @@ class MainViewModel @Inject constructor() : ViewModel() {
                     currentLines.add(
                         Line(
                             event.start.toIntOffset(),
-                            event.end.toIntOffset()
+                            event.end.toIntOffset(),
+                            event.color
                         )
                     )
+                    Log.i("TAG", "OnDrawLine event.color = ${event.color}")
 
                     currentState.copy(lineList = currentLines)
                 }
@@ -41,29 +46,66 @@ class MainViewModel @Inject constructor() : ViewModel() {
             is Event.OnDrawPoint -> {
                 _state.update { currentState ->
                     val pointerList = currentState.pointerList.toMutableList()
-                    pointerList.add(event.point.toIntOffset())
+                    pointerList.add(Point(event.point.toIntOffset(), event.color))
                     currentState.copy(pointerList = pointerList)
                 }
             }
 
             is Event.OnEraseLine -> {
-                val removePoints = getPoints(event.start.toIntOffset(), event.end.toIntOffset())
                 _state.update { currentState ->
-                    var pointerList = currentState.pointerList
-                    for (point in removePoints) {
-                        pointerList = pointerList.filter { distance(point, it) > ERASER_RADIUS_20 }
+                    val newLineList = currentState.lineList.filterNot { line ->
+                        val lineStart = line.startDrawing.toOffset()
+                        val lineEnd = line.endDrawing.toOffset()
+                        val removePoints =
+                            getPoints(event.start.toIntOffset(), event.end.toIntOffset())
+
+                        removePoints.any { point ->
+                            distanceFromPointToLineSegment(
+                                point.toOffset(),
+                                lineStart,
+                                lineEnd
+                            ) <= ERASER_RADIUS_10
+                        }
                     }
-                    currentState.copy(pointerList = pointerList)
+
+                    val newPointerList = currentState.pointerList.filter { point ->
+                        val removePoints =
+                            getPoints(event.start.toIntOffset(), event.end.toIntOffset())
+
+                        removePoints.all { erasePoint ->
+                            distance(erasePoint, point.offset) > ERASER_RADIUS_10
+                        }
+                    }
+
+                    currentState.copy(
+                        lineList = newLineList,
+                        pointerList = newPointerList
+                    )
                 }
             }
 
             is Event.OnErasePoint -> {
                 _state.update { currentState ->
                     val erasePoint = event.point.toIntOffset()
-                    val pointerList = currentState.pointerList.filter {
-                        distance(erasePoint, it) > ERASER_RADIUS_20
+                    val erasePointers = mutableListOf<IntOffset>()
+
+                    val pointerList = currentState.pointerList.filter { point ->
+                        val isNotErasing = distance(erasePoint, point.offset) > ERASER_RADIUS_10
+                        if (!isNotErasing) {
+                            erasePointers.add(point.offset)
+                        }
+                        isNotErasing
                     }
-                    currentState.copy(pointerList = pointerList)
+
+                    if (erasePointers.isNotEmpty()) {
+                        currentState.copy(
+                            backAction = currentState.backAction + Pair(Tool.Pen(), erasePointers),
+                            nextAction = emptyList(),
+                            pointerList = pointerList,
+                        )
+                    } else {
+                        currentState
+                    }
                 }
             }
 
@@ -76,11 +118,11 @@ class MainViewModel @Inject constructor() : ViewModel() {
                     is Tool.Eraser -> {
                         _state.update { currentState ->
                             val lines = currentState.lineList
-                            val points = mutableListOf<IntOffset>()
+                            val points = mutableListOf<Point>()
                             for (line in lines) {
                                 val pointers = getPoints(line.startDrawing, line.endDrawing)
                                 for (point in pointers) {
-                                    points.add(point)
+                                    points.add(Point(point, line.color))
                                 }
                             }
 
@@ -98,7 +140,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
                 _state.update { currentState ->
                     if (currentState.selectedTool == Tool.Pen()) {
                         val lines = currentState.lineList
-                        val points: List<IntOffset> = getLinePoints(lines)
+                        val points: List<Point> = getLinePoints(lines)
 
                         currentState.copy(
                             lineList = emptyList(),
@@ -115,20 +157,155 @@ class MainViewModel @Inject constructor() : ViewModel() {
                     }
                 }
             }
+
+            is Event.OnBackIconClicked -> {
+            }
+
+            is Event.OnForwardIconClicked -> {
+            }
+
+            is Event.OnEraserClicked -> {
+                _state.update { currentState ->
+                    currentState.copy(
+                        selectedTool = Tool.Eraser
+                    )
+                }
+            }
+
+            is Event.OnPenClicked -> {
+                _state.update { currentState ->
+                    currentState.copy(
+                        selectedTool = Tool.Pen()
+                    )
+                }
+            }
+
+            is Event.OnColorPickerClicked -> {
+                _state.update { currentState ->
+                    val isActive = currentState.colorPickerIsActive
+                    currentState.copy(
+                        colorPickerIsActive = isActive.not()
+                    )
+                }
+            }
+
+            is Event.OnClearFrameClicked -> {
+                _state.update {
+                    it.copy(
+                        lineList = emptyList(),
+                        pointerList = emptyList(),
+                        erasePointers = emptyList()
+                    )
+                }
+            }
+
+            is Event.OnColorChanged -> {
+                _state.update { currentState ->
+                    Log.i("TAG", "OnColorChanged Updating color from ${currentState.strokeColor} to ${event.color}")
+                    currentState.copy(
+                        strokeColor = event.color
+                    )
+                }
+
+                Log.i("TAG", "OnColorChanged state.color = ${_state.value.strokeColor}")
+                Log.i("TAG", "OnColorChanged state.value = ${state.value}")
+
+            }
         }
     }
 
-    private fun getLinePoints(lines: List<Line>): List<IntOffset> {
-        val points = mutableListOf<IntOffset>()
+    private fun doHistoryAction(
+        actionList: List<Pair<Tool, List<IntOffset>>>,
+        updateList: List<Pair<Tool, List<IntOffset>>>,
+        statePointers: List<IntOffset>
+    ): Triple<List<Pair<Tool, List<IntOffset>>>, List<Pair<Tool, List<IntOffset>>>, List<IntOffset>> {
+
+        val mActionList = actionList.toMutableList()
+        val mUpdateList = updateList.toMutableList()
+
+        val nextAction = mActionList.last()
+        mActionList.removeAt(mActionList.size - 1)
+
+        val actionTool = nextAction.first
+        val actionPointers = nextAction.second
+
+        val pointers = if (actionTool == Tool.Eraser) {
+            mUpdateList.add(Pair(Tool.Pen(), actionPointers))
+            statePointers.removePointers(actionPointers)
+        } else {
+            mUpdateList.add(Pair(Tool.Eraser, actionPointers))
+            statePointers.addPointers(actionPointers)
+        }
+
+        return Triple(
+            mActionList,
+            mUpdateList,
+            pointers
+        )
+    }
+
+    private fun List<IntOffset>.removePointers(
+        erasePointers: List<IntOffset>
+    ): List<IntOffset> {
+        val array = this.toMutableList()
+
+        for (point in erasePointers) {
+            if (point in array) {
+                array.remove(point)
+            }
+        }
+
+        return array
+    }
+
+    private fun List<IntOffset>.addPointers(
+        penPointers: List<IntOffset>,
+    ): List<IntOffset> {
+        val array = this.toMutableList()
+        for (point in penPointers) {
+            array.add(point)
+        }
+
+        return array
+    }
+
+    private fun getLinePoints(lines: List<Line>): List<Point> {
+        val points = mutableListOf<Point>()
         for (line in lines) {
             val pointers = getPoints(line.startDrawing, line.endDrawing)
-            for (point in pointers) {
-                points.add(point)
+            for (offset in pointers) {
+                points.add(Point(offset, line.color))
             }
         }
 
         return points
     }
+
+    private fun distanceFromPointToLineSegment(
+        point: Offset,
+        lineStart: Offset,
+        lineEnd: Offset
+    ): Float {
+        val lineLength = lineStart.distanceTo(lineEnd)
+        if (lineLength == 0f) {
+            return point.distanceTo(lineStart)
+        }
+
+        val t = ((point.x - lineStart.x) *
+                (lineEnd.x - lineStart.x) +
+                (point.y - lineStart.y) *
+                (lineEnd.y - lineStart.y)) /
+                (lineLength * lineLength)
+
+        val tClamped = t.coerceIn(0f, 1f)
+        val nearestPoint = Offset(
+            lineStart.x + tClamped * (lineEnd.x - lineStart.x),
+            lineStart.y + tClamped * (lineEnd.y - lineStart.y)
+        )
+
+        return point.distanceTo(nearestPoint)
+    }
+
 
     private fun getPoints(start: IntOffset, end: IntOffset): List<IntOffset> {
         val points = mutableListOf<IntOffset>()
@@ -161,6 +338,14 @@ class MainViewModel @Inject constructor() : ViewModel() {
     }
 
     companion object {
-        private const val ERASER_RADIUS_20 = 20.0f
+        private const val ERASER_RADIUS_10 = 10.0f
     }
+}
+
+fun Offset.toIntOffset(): IntOffset = IntOffset(this.x.toInt(), this.y.toInt())
+
+fun Offset.distanceTo(other: Offset): Float {
+    val dx = other.x - this.x
+    val dy = other.y - this.y
+    return sqrt(dx * dx + dy * dy)
 }

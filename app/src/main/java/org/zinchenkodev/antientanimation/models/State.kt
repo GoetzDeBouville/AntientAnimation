@@ -11,7 +11,12 @@ data class State(
     val strokeColor: Color = Color.Blue,
     val lineList: List<Line> = emptyList(),
     val frameList: List<List<IntOffset>> = listOf(listOf()),
-    val pointerList: List<IntOffset> = emptyList(),
+    val pointerList: List<Point> = emptyList(),
     val selectedTool: Tool = Tool.Pen(),
     val erasePointers: List<IntOffset> = emptyList(),
+    val linesNumber: Int = lineList.size,
+    val currentLineNumber: Int = linesNumber,
+    val backAction: List<Pair<Tool, List<IntOffset>>> = emptyList(),
+    val nextAction: List<Pair<Tool, List<IntOffset>>> = emptyList(),
+    val colorPickerIsActive: Boolean = false
 )

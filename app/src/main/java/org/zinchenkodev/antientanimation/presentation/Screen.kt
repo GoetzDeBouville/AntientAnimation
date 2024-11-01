@@ -22,7 +22,11 @@ fun Screen(
     val state = viewModel.state.collectAsState()
 
     Column(modifier = modifier) {
-        Header(modifier = Modifier.padding(horizontal = 16.dp))
+        Header(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            state = state.value,
+            onAction = viewModel::accept
+        )
         Body(
             modifier = Modifier
                 .weight(1f)
@@ -30,7 +34,11 @@ fun Screen(
             state = state.value,
             onAction = viewModel::accept
         )
-        Footer(modifier = Modifier.align(Alignment.CenterHorizontally))
+        Footer(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            state = state.value,
+            onAction = viewModel::accept
+        )
     }
 }
 

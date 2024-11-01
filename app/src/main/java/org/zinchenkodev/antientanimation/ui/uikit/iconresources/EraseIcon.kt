@@ -1,5 +1,7 @@
 package org.zinchenkodev.antientanimation.ui.uikit.iconresources
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
@@ -8,14 +10,17 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
-import kotlin.Suppress
+import org.zinchenkodev.antientanimation.ui.theme.Salad
 
-val EraseIcon: ImageVector
-    get() {
-        if (_EraseIc32 != null) {
-            return _EraseIc32!!
+@Composable
+fun EraseIcon(isChecked: Boolean): ImageVector {
+    return remember(isChecked) {
+        val color = if (isChecked) {
+            Salad
+        } else {
+            Color(0xFFFFFFFF)
         }
-        _EraseIc32 = ImageVector.Builder(
+        ImageVector.Builder(
             name = "EraseIc32",
             defaultWidth = 32.dp,
             defaultHeight = 32.dp,
@@ -23,7 +28,7 @@ val EraseIcon: ImageVector
             viewportHeight = 32f
         ).apply {
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
@@ -32,7 +37,7 @@ val EraseIcon: ImageVector
                 horizontalLineTo(5.329f)
             }
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
@@ -53,9 +58,5 @@ val EraseIcon: ImageVector
                 close()
             }
         }.build()
-
-        return _EraseIc32!!
     }
-
-@Suppress("ObjectPropertyName")
-private var _EraseIc32: ImageVector? = null
+}

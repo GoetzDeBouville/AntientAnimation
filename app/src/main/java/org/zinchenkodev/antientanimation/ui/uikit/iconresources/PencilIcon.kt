@@ -1,5 +1,7 @@
 package org.zinchenkodev.antientanimation.ui.uikit.iconresources
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
@@ -8,13 +10,18 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
+import org.zinchenkodev.antientanimation.ui.theme.Salad
 
-val PencilIcon: ImageVector
-    get() {
-        if (_PencilIc32 != null) {
-            return _PencilIc32!!
+@Composable
+fun PencilIcon(isChecked: Boolean): ImageVector {
+    return remember(isChecked) {
+        val color = if (isChecked) {
+            Salad
+        } else {
+            Color(0xFFFFFFFF)
         }
-        _PencilIc32 = ImageVector.Builder(
+
+        ImageVector.Builder(
             name = "PencilIc32",
             defaultWidth = 33.dp,
             defaultHeight = 32.dp,
@@ -22,7 +29,7 @@ val PencilIcon: ImageVector
             viewportHeight = 32f
         ).apply {
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
@@ -51,9 +58,5 @@ val PencilIcon: ImageVector
                 lineTo(13.553f, 24.094f)
             }
         }.build()
-
-        return _PencilIc32!!
     }
-
-@Suppress("ObjectPropertyName")
-private var _PencilIc32: ImageVector? = null
+}

@@ -1,5 +1,6 @@
 package org.zinchenkodev.antientanimation.ui.uikit
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -44,12 +45,16 @@ fun Body(
                     onDrag = { change, dragAmount ->
                         change.consume()
                         when (state.selectedTool) {
-                            is Tool.Pen -> onAction(
-                                Event.OnDrawLine(
-                                    change.position - dragAmount,
-                                    change.position
+                            is Tool.Pen -> {
+                                onAction(
+                                    Event.OnDrawLine(
+                                        change.position - dragAmount,
+                                        change.position,
+                                        state.strokeColor
+                                    )
                                 )
-                            )
+                                Log.i("TAG", "OnDrawLine state.strokeColor = ${state.strokeColor}")
+                            }
 
                             is Tool.Eraser -> onAction(
                                 Event.OnEraseLine(
@@ -64,8 +69,10 @@ fun Body(
             .pointerInput(state.selectedTool) {
                 detectTapGestures { offset ->
                     when (state.selectedTool) {
-                        is Tool.Pen -> onAction(Event.OnDrawPoint(offset))
-                        is Tool.Eraser -> onAction(Event.OnErasePoint(offset))
+                        is Tool.Pen -> {
+                            onAction(Event.OnDrawPoint(offset, state.strokeColor))
+                        }
+                        is Tool.Eraser -> onAction(Event.OnEraseLine(offset, offset))
                     }
                 }
             },
@@ -91,9 +98,9 @@ fun Body(
 
             state.pointerList.forEach { point ->
                 drawCircle(
-                    color = state.strokeColor,
+                    color = point.color,
                     radius = (state.strokeWidth).toPx(),
-                    center = point.toOffset(),
+                    center = point.offset.toOffset(),
                     style = Fill
                 )
             }

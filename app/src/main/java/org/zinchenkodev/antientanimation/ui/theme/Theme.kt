@@ -1,6 +1,5 @@
 package org.zinchenkodev.antientanimation.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +16,8 @@ private val DarkColorScheme = darkColorScheme(
     secondary = PurpleGrey80,
     tertiary = Pink80,
     onSurfaceVariant = Gray,
-    onSurface = Color.White
+    onSurface = Color.White,
+    onSecondary = Salad
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -25,7 +25,8 @@ private val LightColorScheme = lightColorScheme(
     secondary = PurpleGrey40,
     tertiary = Pink40,
     onSurfaceVariant = Gray,
-    onSurface = Color.White
+    onSurface = Color.White,
+    onSecondary = Salad
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),

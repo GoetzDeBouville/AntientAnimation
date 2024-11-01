@@ -87,7 +87,11 @@ private fun CentralElements(
         Icon(
             imageVector = AddFileIcon,
             contentDescription = null,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .clickable {
+                    onAction(Event.OnCreateNewFrameClicked)
+                }
         )
         Icon(
             imageVector = LayersIcon,

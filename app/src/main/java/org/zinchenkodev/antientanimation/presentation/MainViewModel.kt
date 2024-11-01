@@ -211,6 +211,22 @@ class MainViewModel @Inject constructor() : ViewModel() {
                 Log.i("TAG", "OnColorChanged state.value = ${state.value}")
 
             }
+
+            is Event.OnCreateNewFrameClicked -> {
+                _state.update { currentState ->
+                    val frameList = currentState.frameList.toMutableList()
+                    frameList.add(Pair(currentState.pointerList, currentState.lineList))
+
+                    currentState.copy(
+                        backAction = emptyList(),
+                        nextAction = emptyList(),
+                        pointerList = emptyList(),
+                        lineList = emptyList(),
+                        frameList = frameList,
+                        frameNumber = frameList.size + 1
+                    )
+                }
+            }
         }
     }
 

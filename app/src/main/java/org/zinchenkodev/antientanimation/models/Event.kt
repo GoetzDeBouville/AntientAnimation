@@ -17,4 +17,5 @@ sealed interface Event {
     data object OnColorPickerClicked: Event
     data object OnClearFrameClicked: Event
     class OnColorChanged(val color: Color): Event
+    data object OnCreateNewFrameClicked : Event
 }

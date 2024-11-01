@@ -72,12 +72,14 @@ fun Body(
                         is Tool.Pen -> {
                             onAction(Event.OnDrawPoint(offset, state.strokeColor))
                         }
+
                         is Tool.Eraser -> onAction(Event.OnEraseLine(offset, offset))
                     }
                 }
             },
         shape = RoundedCornerShape(20.dp)
     ) {
+        val previousFrameNumber = state.frameNumber - 2
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
@@ -103,6 +105,25 @@ fun Body(
                     center = point.offset.toOffset(),
                     style = Fill
                 )
+            }
+            if (previousFrameNumber >= 0) {
+                state.frameList[previousFrameNumber].first.forEach { point ->
+                    drawCircle(
+                        color = point.color.copy(alpha = 0.3f),
+                        radius = (state.strokeWidth).toPx(),
+                        center = point.offset.toOffset(),
+                        style = Fill
+                    )
+                }
+
+                state.frameList[previousFrameNumber].second.forEach { line ->
+                    drawLine(
+                        color = line.color.copy(0.3f),
+                        start = line.startDrawing.toOffset(),
+                        end = line.endDrawing.toOffset(),
+                        strokeWidth = state.strokeWidth.toPx()
+                    )
+                }
             }
         }
     }

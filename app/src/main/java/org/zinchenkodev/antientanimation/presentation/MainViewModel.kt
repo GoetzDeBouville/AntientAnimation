@@ -285,25 +285,6 @@ class MainViewModel @Inject constructor() : ViewModel() {
         return points
     }
 
-    private fun getLinePoints(lines: List<Line>): List<Point> {
-        val points = mutableListOf<Point>()
-        for (line in lines) {
-            val pointers = getPoints(line.startDrawing, line.endDrawing)
-            for (point in pointers) {
-                points.add(Point(point, line.color))
-            }
-        }
-
-        return points
-    }
-
-    private fun distance(point1: IntOffset, point2: IntOffset): Float {
-        val x = (point1.x - point2.x).toFloat()
-        val y = (point1.y - point2.y).toFloat()
-
-        return sqrt(x * x + y * y)
-    }
-
     private companion object {
         const val ERASER_RADIUS_10 = 10.0f
     }

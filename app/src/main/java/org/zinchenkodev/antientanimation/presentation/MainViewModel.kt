@@ -6,6 +6,7 @@ import androidx.compose.ui.unit.toOffset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +14,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.zinchenkodev.antientanimation.models.Event
 import org.zinchenkodev.antientanimation.models.Line
-import org.zinchenkodev.antientanimation.models.Point
 import org.zinchenkodev.antientanimation.models.State
 import org.zinchenkodev.antientanimation.models.Tool
 import java.util.ArrayDeque
@@ -31,7 +31,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
         super.onCleared()
         _state.update {
             it.copy(
-                onPlay = false
+                isPlaying = false
             )
         }
     }
@@ -39,145 +39,15 @@ class MainViewModel @Inject constructor() : ViewModel() {
     @Suppress("t")
     fun accept(event: Event) {
         when (event) {
-            is Event.OnDrawLine -> {
-                _state.update { currentState ->
-                    val currentLines = currentState.lineList.toMutableList()
-                    currentLines.add(
-                        Line(
-                            event.start.toIntOffset(),
-                            event.end.toIntOffset(),
-                            event.color
-                        )
-                    )
-                    currentState.backActionList.addLast(currentLines)
-                    currentState.copy(
-                        lineList = currentLines,
-                        backActionList = currentState.backActionList,
-                        forwardActionList = ArrayDeque()
-                    )
-                }
-            }
-
-            is Event.OnEraseLine -> {
-                _state.update { currentState ->
-                    val newLineList = currentState.lineList.filterNot { line ->
-                        val lineStart = line.startDrawing.toOffset()
-                        val lineEnd = line.endDrawing.toOffset()
-                        val removePoints =
-                            getPoints(event.start.toIntOffset(), event.end.toIntOffset())
-
-                        removePoints.any { point ->
-                            distanceFromPointToLineSegment(
-                                point.toOffset(),
-                                lineStart,
-                                lineEnd
-                            ) <= ERASER_RADIUS_10
-                        }
-                    }
-                    currentState.backActionList.addLast(newLineList)
-
-                    currentState.copy(
-                        lineList = newLineList,
-                        backActionList = currentState.backActionList,
-                        forwardActionList = ArrayDeque()
-                    )
-                }
-            }
-
-            is Event.OnDragEnd -> {
-                _state.update { currentState ->
-                    if (currentState.selectedTool == Tool.Pen()) {
-                        currentState.copy(
-                            lineList = emptyList(),
-                        )
-                    } else {
-                        if (currentState.erasePointers.isNotEmpty()) {
-                            currentState.copy(
-                                erasePointers = emptyList()
-                            )
-                        } else {
-                            currentState
-                        }
-                    }
-                }
-            }
-
-            is Event.OnBackIconClicked -> {
-                _state.update { currentState ->
-                    val lastAction = currentState.backActionList.removeLast()
-                    currentState.forwardActionList.addLast(lastAction)
-                    val updatedLines = currentState.backActionList.peekLast() ?: emptyList()
-                    currentState.copy(
-                        lineList = updatedLines,
-                        backActionList = currentState.backActionList,
-                        forwardActionList = currentState.forwardActionList
-                    )
-                }
-            }
-
-            is Event.OnForwardIconClicked -> {
-                _state.update { currentState ->
-                    val lastAction = currentState.forwardActionList.removeLast()
-                    currentState.backActionList.addLast(lastAction)
-                    val updatedLines = currentState.backActionList.peekLast() ?: emptyList()
-                    currentState.copy(
-                        lineList = updatedLines,
-                        backActionList = currentState.backActionList,
-                        forwardActionList = currentState.forwardActionList
-                    )
-                }
-            }
-
-            is Event.OnToolClick -> {
-                when (event.tool) {
-                    is Tool.Pen -> _state.update {
-                        _state.value.copy(selectedTool = Tool.Pen())
-                    }
-
-                    is Tool.Eraser -> {
-                        _state.update { currentState ->
-                            currentState.copy(
-                                selectedTool = event.tool,
-                            )
-                        }
-                    }
-                }
-            }
-
-            is Event.OnEraserClicked -> {
-                _state.update { currentState ->
-                    currentState.copy(
-                        selectedTool = Tool.Eraser
-                    )
-                }
-            }
-
-            is Event.OnPenClicked -> {
-                _state.update { currentState ->
-                    currentState.copy(
-                        selectedTool = Tool.Pen()
-                    )
-                }
-            }
-
-            is Event.OnColorPickerClicked -> {
-                _state.update { currentState ->
-                    val isActive = currentState.colorPickerIsActive
-                    currentState.copy(
-                        colorPickerIsActive = isActive.not()
-                    )
-                }
-            }
-
-            is Event.OnClearFrameClicked -> {
-                _state.update {
-                    it.copy(
-                        lineList = emptyList(),
-                        erasePointers = emptyList()
-                    )
-                }
-            }
-
+            is Event.OnDrawLine -> onDrawLine(event)
+            is Event.OnEraseLine -> onEraseLine(event)
+            is Event.OnBackIconClicked -> onBackIconClicked()
+            is Event.OnForwardIconClicked -> onForwardIconClicked()
+            is Event.OnToolClick -> onToolClick(event)
+            is Event.OnEraserClicked -> onEraserClicked()
+            is Event.OnPenClicked -> onPenClicked()
+            is Event.OnColorPickerClicked -> onColorPickerClicked()
+            is Event.OnClearFrameClicked -> onClearFrameClicked()
             is Event.OnColorChanged -> {
                 _state.update { currentState ->
                     currentState.copy(
@@ -187,50 +57,247 @@ class MainViewModel @Inject constructor() : ViewModel() {
                 }
             }
 
-            is Event.OnCreateNewFrameClicked -> {
-                _state.update { currentState ->
-                    val frameList = currentState.frameList.toMutableList()
-                    frameList.add(currentState.lineList)
+            is Event.OnCreateNewFrameClicked -> onCreateNewFrameClicked()
 
-                    currentState.copy(
-                        backActionList = ArrayDeque(),
-                        forwardActionList = ArrayDeque(),
-                        lineList = emptyList(),
-                        frameList = frameList,
-                    )
-                }
-            }
-
-            is Event.OnPlayClicked -> {
-                _state.update {
-                    it.copy(
-                        onPlay = true
-                    )
-                }
-
-                viewModelScope.launch {
-                    while (_state.value.onPlay) {
-                        for (frame in _state.value.frameList) {
-                            if (_state.value.onPlay.not()) {
-                                break
-                            }
-                            _state.update {
-                                it.copy(
-                                    lineList = frame
-                                )
-                            }
-                            delay(500)
-                        }
-                    }
-                }
-            }
+            is Event.OnPlayClicked -> onPlayClicked()
 
             is Event.OnPauseClicked -> {
                 _state.update {
                     it.copy(
-                        onPlay = false,
-                        lineList = emptyList()
+                        isPlaying = false,
+                        lineList = if (it.backActionBackStack.size > 0) {
+                            it.backActionBackStack.last
+                        } else {
+                            emptyList()
+                        }
                     )
+                }
+            }
+        }
+    }
+
+    private fun onDrawLine(event: Event.OnDrawLine) {
+        viewModelScope.launch(Dispatchers.Default) {
+            _state.update { currentState ->
+                val currentLines = currentState.lineList.toMutableList()
+                currentLines.add(
+                    Line(
+                        event.start.toIntOffset(),
+                        event.end.toIntOffset(),
+                        event.color
+                    )
+                )
+
+                if (currentState.backActionBackStack.size > MAX_HISTORY_SIZE) {
+                    currentState.copy(
+                        lineList = currentLines,
+                        backActionBackStack = currentState.backActionBackStack.apply {
+                            removeFirst()
+                            addLast(currentLines)
+                        },
+                        forwardActionBackStack = ArrayDeque()
+                    )
+                } else {
+                    currentState.copy(
+                        lineList = currentLines,
+                        backActionBackStack = currentState.backActionBackStack.apply {
+                            addLast(
+                                currentLines
+                            )
+                        },
+                        forwardActionBackStack = ArrayDeque()
+                    )
+                }
+            }
+        }
+    }
+
+    private fun onEraseLine(event: Event.OnEraseLine) {
+        viewModelScope.launch(Dispatchers.Default) {
+            _state.update { currentState ->
+                val newLineList = currentState.lineList.filterNot { line ->
+                    val lineStart = line.startDrawing.toOffset()
+                    val lineEnd = line.endDrawing.toOffset()
+                    val removePoints =
+                        getPoints(event.start.toIntOffset(), event.end.toIntOffset())
+
+                    removePoints.any { point ->
+                        distanceFromPointToLineSegment(
+                            point.toOffset(),
+                            lineStart,
+                            lineEnd
+                        ) <= ERASER_RADIUS_10
+                    }
+                }
+                if (currentState.backActionBackStack.size > 0 && newLineList != currentState.backActionBackStack.last) {
+                    currentState.backActionBackStack.addLast(newLineList)
+                    if (currentState.backActionBackStack.size > MAX_HISTORY_SIZE) {
+                        currentState.copy(
+                            lineList = newLineList,
+                            backActionBackStack = currentState.backActionBackStack.apply {
+                                removeFirst()
+                                addLast(newLineList)
+                            },
+                            forwardActionBackStack = ArrayDeque()
+                        )
+                    } else {
+                        currentState.copy(
+                            lineList = newLineList,
+                            backActionBackStack = currentState.backActionBackStack.apply {
+                                addLast(
+                                    newLineList
+                                )
+                            },
+                            forwardActionBackStack = ArrayDeque()
+                        )
+                    }
+                } else {
+                    currentState.copy(
+                        lineList = newLineList,
+                        backActionBackStack = currentState.backActionBackStack,
+                        forwardActionBackStack = ArrayDeque()
+                    )
+                }
+            }
+        }
+    }
+
+    private fun onBackIconClicked() {
+        _state.update { currentState ->
+            if (currentState.backActionBackStack.size > 1) {
+                val lastItemFrame = currentState.backActionBackStack.peekLast()
+                val updatedLines = currentState.backActionBackStack.removeLast()
+                currentState.copy(
+                    lineList = updatedLines,
+                    backActionBackStack = currentState.backActionBackStack,
+                    forwardActionBackStack = currentState.forwardActionBackStack.apply {
+                        addLast(lastItemFrame)
+                    }
+                )
+            } else {
+                val lastItemFrame = currentState.backActionBackStack.peekLast()
+                val updatedLines = currentState.backActionBackStack.removeLast()
+                currentState.copy(
+                    lineList = updatedLines,
+                    backActionBackStack = ArrayDeque(),
+                    forwardActionBackStack = currentState.forwardActionBackStack.apply {
+                        addLast(lastItemFrame)
+                    }
+                )
+            }
+        }
+    }
+
+    private fun onForwardIconClicked() {
+        _state.update { currentState ->
+            val lastAction = currentState.forwardActionBackStack.removeLast()
+            currentState.backActionBackStack.addLast(lastAction)
+            val updatedLines = currentState.backActionBackStack.peekLast() ?: emptyList()
+            currentState.copy(
+                lineList = updatedLines,
+                backActionBackStack = currentState.backActionBackStack,
+                forwardActionBackStack = currentState.forwardActionBackStack
+            )
+        }
+    }
+
+    private fun onToolClick(event: Event.OnToolClick) {
+        when (event.tool) {
+            is Tool.Pen -> _state.update {
+                _state.value.copy(selectedTool = Tool.Pen())
+            }
+
+            is Tool.Eraser -> {
+                _state.update { currentState ->
+                    currentState.copy(
+                        selectedTool = event.tool,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun onEraserClicked() {
+        _state.update { currentState ->
+            currentState.copy(
+                selectedTool = Tool.Eraser
+            )
+        }
+    }
+
+    private fun onPenClicked() {
+        _state.update { currentState ->
+            currentState.copy(
+                selectedTool = Tool.Pen()
+            )
+        }
+    }
+
+    private fun onColorPickerClicked() {
+        _state.update { currentState ->
+            val isActive = currentState.colorPickerIsActive
+            currentState.copy(
+                colorPickerIsActive = isActive.not()
+            )
+        }
+    }
+
+    private fun onClearFrameClicked() {
+        _state.update { currentState ->
+            if (currentState.backActionBackStack.isEmpty()) {
+                currentState.copy(
+                    lineList = emptyList(),
+                    forwardActionBackStack = ArrayDeque()
+                )
+            } else if (currentState.backActionBackStack.last.isEmpty()) {
+                currentState.copy(
+                    lineList = emptyList(),
+                    forwardActionBackStack = ArrayDeque()
+                )
+            } else {
+                currentState.backActionBackStack.addLast(emptyList())
+                currentState.copy(
+                    lineList = emptyList(),
+                    backActionBackStack = currentState.backActionBackStack,
+                    forwardActionBackStack = ArrayDeque()
+                )
+            }
+        }
+    }
+
+    private fun onCreateNewFrameClicked() {
+        _state.update { currentState ->
+            val frameList = currentState.frameList.toMutableList()
+            frameList.add(currentState.lineList)
+
+            currentState.copy(
+                backActionBackStack = ArrayDeque(),
+                forwardActionBackStack = ArrayDeque(),
+                lineList = emptyList(),
+                frameList = frameList,
+            )
+        }
+    }
+
+    private fun onPlayClicked() {
+        _state.update {
+            it.copy(
+                isPlaying = true
+            )
+        }
+
+        viewModelScope.launch {
+            while (_state.value.isPlaying) {
+                for (frame in _state.value.frameList) {
+                    if (_state.value.isPlaying.not()) {
+                        break
+                    }
+                    _state.update {
+                        it.copy(
+                            lineList = frame
+                        )
+                    }
+                    delay(500)
                 }
             }
         }
@@ -287,6 +354,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
 
     private companion object {
         const val ERASER_RADIUS_10 = 10.0f
+        const val MAX_HISTORY_SIZE = 128
     }
 }
 

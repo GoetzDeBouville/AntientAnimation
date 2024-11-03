@@ -24,6 +24,7 @@ import org.zinchenkodev.antientanimation.models.Event
 import org.zinchenkodev.antientanimation.models.State
 import org.zinchenkodev.antientanimation.models.Tool
 
+@Suppress("t")
 @Composable
 fun Body(
     modifier: Modifier = Modifier,
@@ -37,13 +38,11 @@ fun Body(
             .pointerInput(state.selectedTool) {
                 detectDragGestures(
                     onDragStart = {},
-                    onDragEnd = {
-                        onAction(Event.OnDragEnd)
-                    },
+                    onDragEnd = {},
                     onDrag = { change, dragAmount ->
                         change.consume()
                         when (state.selectedTool) {
-                            is Tool.Pen -> {
+                            is Tool.Pen -> if (state.isPlaying.not()) {
                                 onAction(
                                     Event.OnDrawLine(
                                         change.position - dragAmount,
@@ -53,12 +52,14 @@ fun Body(
                                 )
                             }
 
-                            is Tool.Eraser -> onAction(
-                                Event.OnEraseLine(
-                                    change.position - dragAmount,
-                                    change.position
+                            is Tool.Eraser -> if (state.isPlaying.not()) {
+                                onAction(
+                                    Event.OnEraseLine(
+                                        change.position - dragAmount,
+                                        change.position
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 )
@@ -66,23 +67,25 @@ fun Body(
             .pointerInput(state.selectedTool) {
                 detectTapGestures { offset ->
                     when (state.selectedTool) {
-                        is Tool.Pen -> {
+                        is Tool.Pen -> if (state.isPlaying.not()) {
                             onAction(
                                 Event.OnDrawLine(
                                     start = offset.copy(
-                                        x = offset.x - (state.strokeWidth / 3).toPx(),
-                                        y = offset.y - (state.strokeWidth / 2).toPx()
+                                        x = offset.x - (state.strokeWidth / 2).toPx(),
+                                        y = offset.y
                                     ),
                                     end = offset.copy(
-                                        x = offset.x + (state.strokeWidth / 3).toPx(),
-                                        y = offset.y + (state.strokeWidth / 2).toPx()
+                                        x = offset.x + (state.strokeWidth / 2).toPx(),
+                                        y = offset.y
                                     ),
                                     state.strokeColor
                                 )
                             )
                         }
 
-                        is Tool.Eraser -> onAction(Event.OnEraseLine(offset, offset))
+                        is Tool.Eraser -> if (state.isPlaying.not()) {
+                            onAction(Event.OnEraseLine(offset, offset))
+                        }
                     }
                 }
             },
@@ -107,7 +110,7 @@ fun Body(
                 )
             }
 
-            if (previousFrameNumber >= 0 && state.onPlay.not()) {
+            if (previousFrameNumber >= 0 && state.isPlaying.not()) {
                 state.frameList[previousFrameNumber].forEach { line ->
                     drawLine(
                         color = line.color.copy(0.1f),

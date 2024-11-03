@@ -21,6 +21,7 @@ import org.zinchenkodev.antientanimation.ui.uikit.iconresources.LayersIcon
 import org.zinchenkodev.antientanimation.ui.uikit.iconresources.PauseIcon
 import org.zinchenkodev.antientanimation.ui.uikit.iconresources.PlayIcon
 
+@Suppress("t")
 @Composable
 fun Header(
     modifier: Modifier = Modifier,
@@ -33,22 +34,22 @@ fun Header(
     ) {
         Image(
             modifier = Modifier.clickable {
-                if (state.lineList.isNotEmpty() && state.onPlay.not()) {
+                if (state.backActionBackStack.isNotEmpty() && state.isPlaying.not()) {
                     onAction(Event.OnBackIconClicked)
                 }
             },
-            imageVector = ActionBackIcon(state.lineList.isNotEmpty() && state.onPlay.not()),
+            imageVector = ActionBackIcon(state.backActionBackStack.isNotEmpty() && state.isPlaying.not()),
             contentDescription = null
         )
         Image(
             modifier = Modifier
                 .padding(start = 8.dp)
                 .clickable {
-                    if (state.forwardActionList.isNotEmpty() && state.onPlay.not()) {
+                    if (state.forwardActionBackStack.isNotEmpty() && state.isPlaying.not()) {
                         onAction(Event.OnForwardIconClicked)
                     }
                 },
-            imageVector = ActionForwardIcon(state.forwardActionList.isNotEmpty() && state.onPlay.not()),
+            imageVector = ActionForwardIcon(state.forwardActionBackStack.isNotEmpty() && state.isPlaying.not()),
             contentDescription = null
         )
         Spacer(modifier = Modifier.weight(1f))
@@ -61,14 +62,14 @@ fun Header(
         Spacer(modifier = Modifier.weight(1f))
 
         Image(
-            imageVector = PauseIcon(state.onPlay),
+            imageVector = PauseIcon(state.isPlaying),
             contentDescription = null,
             modifier = Modifier
                 .clickable {
                     onAction(Event.OnPauseClicked)
                 }
         )
-        val isActivePlay = state.onPlay.not() && state.frameList.size > 1
+        val isActivePlay = state.isPlaying.not() && state.frameList.size > 1
 
         Image(
             modifier = Modifier
@@ -94,7 +95,7 @@ private fun CentralElements(
         Icon(
             modifier = Modifier
                 .clickable {
-                    if (state.onPlay.not()) {
+                    if (state.isPlaying.not()) {
                         onAction(Event.OnClearFrameClicked)
                     }
                 },
@@ -107,7 +108,7 @@ private fun CentralElements(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .clickable {
-                    if (state.onPlay.not()) {
+                    if (state.isPlaying.not()) {
                         onAction(Event.OnCreateNewFrameClicked)
                     }
                 }

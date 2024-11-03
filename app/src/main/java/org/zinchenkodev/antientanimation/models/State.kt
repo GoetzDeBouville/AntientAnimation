@@ -12,11 +12,8 @@ data class State(
     val lineList: List<Line> = emptyList(),
     val frameList: List<List<Line>> = emptyList(),
     val selectedTool: Tool = Tool.Pen(),
-    val erasePointers: List<Point> = emptyList(),
-    val linesNumber: Int = lineList.size,
-    val currentLineNumber: Int = linesNumber,
-    val backActionList: Deque<List<Line>> = ArrayDeque(), // contains list of frames
-    val forwardActionList: Deque<List<Line>> = ArrayDeque(), // contains list of frames
+    val backActionBackStack: Deque<List<Line>> = ArrayDeque(), // contains list of frames from history
+    val forwardActionBackStack: Deque<List<Line>> = ArrayDeque(), // contains list of frames from history
     val colorPickerIsActive: Boolean = false,
-    val onPlay: Boolean = false
+    val isPlaying: Boolean = false
 )

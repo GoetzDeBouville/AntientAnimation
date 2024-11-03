@@ -44,11 +44,11 @@ fun Header(
             modifier = Modifier
                 .padding(start = 8.dp)
                 .clickable {
-                    if (state.forwardAction.isNotEmpty() && state.onPlay.not()) {
+                    if (state.forwardActionList.isNotEmpty() && state.onPlay.not()) {
                         onAction(Event.OnForwardIconClicked)
                     }
                 },
-            imageVector = ActionForwardIcon(state.forwardAction.isNotEmpty() && state.onPlay.not()),
+            imageVector = ActionForwardIcon(state.forwardActionList.isNotEmpty() && state.onPlay.not()),
             contentDescription = null
         )
         Spacer(modifier = Modifier.weight(1f))

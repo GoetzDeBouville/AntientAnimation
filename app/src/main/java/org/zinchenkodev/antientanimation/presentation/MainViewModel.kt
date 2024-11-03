@@ -13,8 +13,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.zinchenkodev.antientanimation.models.Event
 import org.zinchenkodev.antientanimation.models.Line
+import org.zinchenkodev.antientanimation.models.Point
 import org.zinchenkodev.antientanimation.models.State
 import org.zinchenkodev.antientanimation.models.Tool
+import java.util.ArrayDeque
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -24,6 +26,15 @@ class MainViewModel @Inject constructor() : ViewModel() {
     private val _state = MutableStateFlow(State())
     val state
         get() = _state.asStateFlow()
+
+    override fun onCleared() {
+        super.onCleared()
+        _state.update {
+            it.copy(
+                onPlay = false
+            )
+        }
+    }
 
     @Suppress("t")
     fun accept(event: Event) {
@@ -38,10 +49,11 @@ class MainViewModel @Inject constructor() : ViewModel() {
                             event.color
                         )
                     )
-
+                    currentState.backActionList.addLast(currentLines)
                     currentState.copy(
                         lineList = currentLines,
-                        forwardAction = emptyList()
+                        backActionList = currentState.backActionList,
+                        forwardActionList = ArrayDeque()
                     )
                 }
             }
@@ -62,27 +74,13 @@ class MainViewModel @Inject constructor() : ViewModel() {
                             ) <= ERASER_RADIUS_10
                         }
                     }
+                    currentState.backActionList.addLast(newLineList)
 
                     currentState.copy(
                         lineList = newLineList,
-                        forwardAction = emptyList()
+                        backActionList = currentState.backActionList,
+                        forwardActionList = ArrayDeque()
                     )
-                }
-            }
-
-            is Event.OnToolClick -> {
-                when (event.tool) {
-                    is Tool.Pen -> _state.update {
-                        _state.value.copy(selectedTool = Tool.Pen())
-                    }
-
-                    is Tool.Eraser -> {
-                        _state.update { currentState ->
-                            currentState.copy(
-                                selectedTool = event.tool,
-                            )
-                        }
-                    }
                 }
             }
 
@@ -105,10 +103,45 @@ class MainViewModel @Inject constructor() : ViewModel() {
             }
 
             is Event.OnBackIconClicked -> {
-
+                _state.update { currentState ->
+                    val lastAction = currentState.backActionList.removeLast()
+                    currentState.forwardActionList.addLast(lastAction)
+                    val updatedLines = currentState.backActionList.peekLast() ?: emptyList()
+                    currentState.copy(
+                        lineList = updatedLines,
+                        backActionList = currentState.backActionList,
+                        forwardActionList = currentState.forwardActionList
+                    )
+                }
             }
 
             is Event.OnForwardIconClicked -> {
+                _state.update { currentState ->
+                    val lastAction = currentState.forwardActionList.removeLast()
+                    currentState.backActionList.addLast(lastAction)
+                    val updatedLines = currentState.backActionList.peekLast() ?: emptyList()
+                    currentState.copy(
+                        lineList = updatedLines,
+                        backActionList = currentState.backActionList,
+                        forwardActionList = currentState.forwardActionList
+                    )
+                }
+            }
+
+            is Event.OnToolClick -> {
+                when (event.tool) {
+                    is Tool.Pen -> _state.update {
+                        _state.value.copy(selectedTool = Tool.Pen())
+                    }
+
+                    is Tool.Eraser -> {
+                        _state.update { currentState ->
+                            currentState.copy(
+                                selectedTool = event.tool,
+                            )
+                        }
+                    }
+                }
             }
 
             is Event.OnEraserClicked -> {
@@ -160,7 +193,8 @@ class MainViewModel @Inject constructor() : ViewModel() {
                     frameList.add(currentState.lineList)
 
                     currentState.copy(
-                        backAction = emptyList(),
+                        backActionList = ArrayDeque(),
+                        forwardActionList = ArrayDeque(),
                         lineList = emptyList(),
                         frameList = frameList,
                     )
@@ -251,17 +285,27 @@ class MainViewModel @Inject constructor() : ViewModel() {
         return points
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        _state.update {
-            it.copy(
-                onPlay = false
-            )
+    private fun getLinePoints(lines: List<Line>): List<Point> {
+        val points = mutableListOf<Point>()
+        for (line in lines) {
+            val pointers = getPoints(line.startDrawing, line.endDrawing)
+            for (point in pointers) {
+                points.add(Point(point, line.color))
+            }
         }
+
+        return points
     }
 
-    companion object {
-        private const val ERASER_RADIUS_10 = 10.0f
+    private fun distance(point1: IntOffset, point2: IntOffset): Float {
+        val x = (point1.x - point2.x).toFloat()
+        val y = (point1.y - point2.y).toFloat()
+
+        return sqrt(x * x + y * y)
+    }
+
+    private companion object {
+        const val ERASER_RADIUS_10 = 10.0f
     }
 }
 

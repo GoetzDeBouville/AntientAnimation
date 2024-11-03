@@ -23,9 +23,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
-import org.zinchenkodev.antientanimation.models.Event
-import org.zinchenkodev.antientanimation.models.State
-import org.zinchenkodev.antientanimation.models.Tool
+import org.zinchenkodev.antientanimation.presentation.models.Event
+import org.zinchenkodev.antientanimation.presentation.models.State
+import org.zinchenkodev.antientanimation.presentation.models.Tool
 import org.zinchenkodev.antientanimation.ui.uikit.iconresources.BrushIcon
 import org.zinchenkodev.antientanimation.ui.uikit.iconresources.ColorPickerIcon
 import org.zinchenkodev.antientanimation.ui.uikit.iconresources.EraseIcon

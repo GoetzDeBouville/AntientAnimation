@@ -1,4 +1,4 @@
-package org.zinchenkodev.antientanimation.models
+package org.zinchenkodev.antientanimation.domain.models
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset

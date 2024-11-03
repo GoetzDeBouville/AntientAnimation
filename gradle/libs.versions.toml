@@ -9,6 +9,7 @@ espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.6"
 activityCompose = "1.9.3"
 composeBom = "2024.10.00"
+room = "2.6.1"
 
 hilt = "2.52"
 ksp = "2.0.20-1.0.24"
@@ -36,6 +37,18 @@ hilt-android-gradle-plugin = { module = "com.google.dagger:hilt-android-gradle-p
 
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltNavigationCompose" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+
+# DB
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+
+[bundles]
+
+room = [
+    "room-runtime",
+    "room-ktx"
+]
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

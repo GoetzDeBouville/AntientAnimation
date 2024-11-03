@@ -12,10 +12,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.zinchenkodev.antientanimation.models.Event
-import org.zinchenkodev.antientanimation.models.Line
-import org.zinchenkodev.antientanimation.models.State
-import org.zinchenkodev.antientanimation.models.Tool
+import org.zinchenkodev.antientanimation.presentation.models.Event
+import org.zinchenkodev.antientanimation.domain.models.Line
+import org.zinchenkodev.antientanimation.presentation.models.State
+import org.zinchenkodev.antientanimation.presentation.models.Tool
 import java.util.ArrayDeque
 import javax.inject.Inject
 import kotlin.math.abs

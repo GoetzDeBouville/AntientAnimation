@@ -11,8 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import org.zinchenkodev.antientanimation.models.Event
-import org.zinchenkodev.antientanimation.models.State
+import org.zinchenkodev.antientanimation.presentation.models.Event
+import org.zinchenkodev.antientanimation.presentation.models.State
 import org.zinchenkodev.antientanimation.ui.uikit.iconresources.ActionBackIcon
 import org.zinchenkodev.antientanimation.ui.uikit.iconresources.ActionForwardIcon
 import org.zinchenkodev.antientanimation.ui.uikit.iconresources.AddFileIcon

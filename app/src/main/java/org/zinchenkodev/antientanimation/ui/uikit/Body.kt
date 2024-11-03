@@ -20,9 +20,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
 import org.zinchenkodev.antientanimation.R
-import org.zinchenkodev.antientanimation.models.Event
-import org.zinchenkodev.antientanimation.models.State
-import org.zinchenkodev.antientanimation.models.Tool
+import org.zinchenkodev.antientanimation.presentation.models.Event
+import org.zinchenkodev.antientanimation.presentation.models.State
+import org.zinchenkodev.antientanimation.presentation.models.Tool
 
 @Suppress("t")
 @Composable

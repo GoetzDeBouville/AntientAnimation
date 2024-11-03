@@ -1,8 +1,9 @@
-package org.zinchenkodev.antientanimation.models
+package org.zinchenkodev.antientanimation.presentation.models
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.zinchenkodev.antientanimation.domain.models.Line
 import java.util.ArrayDeque
 import java.util.Deque
 

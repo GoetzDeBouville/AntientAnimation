@@ -70,7 +70,6 @@ class AnimationRepositoryImpl(private val dao: AnimationDao) : AnimationReposito
         } else {
             animationSetId
         }
-        Log.i(TAG, "setId = $setId")
 
         val framesWithLines = try {
             dao.getFramesWithLines(setId, startIndex, PAGGING_SIZE)
@@ -78,8 +77,6 @@ class AnimationRepositoryImpl(private val dao: AnimationDao) : AnimationReposito
             Log.e(TAG, "Error getting frames with lines, error -> ${e.localizedMessage}")
             emptyList()
         }
-
-        Log.i(TAG, "framesWithLines = $framesWithLines")
 
         return framesWithLines.map {
             it.map { lineEntity ->

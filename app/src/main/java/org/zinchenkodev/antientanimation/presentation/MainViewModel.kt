@@ -1,6 +1,5 @@
 package org.zinchenkodev.antientanimation.presentation
 
-import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.toOffset
@@ -38,6 +37,9 @@ class MainViewModel @Inject constructor(
     val state
         get() = _state.asStateFlow()
 
+    /**
+     * Clear db and reset table for testing
+     */
     init {
         viewModelScope.launch {
             clearDbAndResetTableUseCase()
@@ -59,13 +61,15 @@ class MainViewModel @Inject constructor(
             is Event.OnDrawPoint -> onDrawPoint(event)
             is Event.OnEraseLine -> onEraseLine(event)
             is Event.OnDragEnd -> {
-                _state.update {
-                    it.copy(
-                        backActionBackStack = it.backActionBackStack.apply {
-                            addLast(it.lineList)
-                        },
-                        forwardActionBackStack = ArrayDeque()
-                    )
+                if (_state.value.isPlaying.not()) {
+                    _state.update {
+                        it.copy(
+                            backActionBackStack = it.backActionBackStack.apply {
+                                addLast(it.lineList)
+                            },
+                            forwardActionBackStack = ArrayDeque()
+                        )
+                    }
                 }
             }
 
@@ -105,98 +109,104 @@ class MainViewModel @Inject constructor(
     }
 
     private fun onDrawPoint(event: Event.OnDrawPoint) {
-        viewModelScope.launch(Dispatchers.Default) {
-            _state.update { currentState ->
-                val currentLines = currentState.lineList.toMutableList()
-                currentLines.add(
-                    Line(
-                        event.start.toIntOffset(),
-                        event.end.toIntOffset(),
-                        event.color
+        if (_state.value.isPlaying.not()) {
+            viewModelScope.launch(Dispatchers.Default) {
+                _state.update { currentState ->
+                    val currentLines = currentState.lineList.toMutableList()
+                    currentLines.add(
+                        Line(
+                            event.start.toIntOffset(),
+                            event.end.toIntOffset(),
+                            event.color
+                        )
                     )
-                )
 
-                if (currentState.backActionBackStack.size > MAX_HISTORY_SIZE) {
-                    currentState.copy(
-                        lineList = currentLines,
-                        backActionBackStack = currentState.backActionBackStack.apply {
-                            removeFirst()
-                            addLast(currentLines)
-                        },
-                        forwardActionBackStack = ArrayDeque()
-                    )
-                } else {
-                    currentState.copy(
-                        lineList = currentLines,
-                        backActionBackStack = currentState.backActionBackStack.apply {
-                            addLast(
-                                currentLines
-                            )
-                        },
-                        forwardActionBackStack = ArrayDeque()
-                    )
+                    if (currentState.backActionBackStack.size > MAX_HISTORY_SIZE) {
+                        currentState.copy(
+                            lineList = currentLines,
+                            backActionBackStack = currentState.backActionBackStack.apply {
+                                removeFirst()
+                                addLast(currentLines)
+                            },
+                            forwardActionBackStack = ArrayDeque()
+                        )
+                    } else {
+                        currentState.copy(
+                            lineList = currentLines,
+                            backActionBackStack = currentState.backActionBackStack.apply {
+                                addLast(
+                                    currentLines
+                                )
+                            },
+                            forwardActionBackStack = ArrayDeque()
+                        )
+                    }
                 }
             }
         }
     }
 
     private fun onDrawLine(event: Event.OnDrawLine) {
-        viewModelScope.launch(Dispatchers.Default) {
-            _state.update { currentState ->
-                val currentLines = currentState.lineList.toMutableList()
-                currentLines.add(
-                    Line(
-                        event.start.toIntOffset(),
-                        event.end.toIntOffset(),
-                        event.color
+        if (_state.value.isPlaying.not()) {
+            viewModelScope.launch(Dispatchers.Default) {
+                _state.update { currentState ->
+                    val currentLines = currentState.lineList.toMutableList()
+                    currentLines.add(
+                        Line(
+                            event.start.toIntOffset(),
+                            event.end.toIntOffset(),
+                            event.color
+                        )
                     )
-                )
 
-                if (currentState.backActionBackStack.size > MAX_HISTORY_SIZE) {
-                    currentState.copy(
-                        lineList = currentLines
-                    )
-                } else {
-                    currentState.copy(
-                        lineList = currentLines
-                    )
+                    if (currentState.backActionBackStack.size > MAX_HISTORY_SIZE) {
+                        currentState.copy(
+                            lineList = currentLines
+                        )
+                    } else {
+                        currentState.copy(
+                            lineList = currentLines
+                        )
+                    }
                 }
             }
         }
     }
 
     private fun onEraseLine(event: Event.OnEraseLine) {
-        viewModelScope.launch(Dispatchers.Default) {
-            _state.update { currentState ->
-                val newLineList = currentState.lineList.filterNot { line ->
-                    val lineStart = line.startDrawing.toOffset()
-                    val lineEnd = line.endDrawing.toOffset()
-                    val removePoints =
-                        getPoints(event.start.toIntOffset(), event.end.toIntOffset())
+        if (_state.value.isPlaying.not()) {
+            viewModelScope.launch(Dispatchers.Default) {
+                _state.update { currentState ->
+                    val newLineList = currentState.lineList.filterNot { line ->
+                        val lineStart = line.startDrawing.toOffset()
+                        val lineEnd = line.endDrawing.toOffset()
+                        val removePoints =
+                            getPoints(event.start.toIntOffset(), event.end.toIntOffset())
 
-                    removePoints.any { point ->
-                        distanceFromPointToLineSegment(
-                            point.toOffset(),
-                            lineStart,
-                            lineEnd
-                        ) <= ERASER_RADIUS_10
+                        removePoints.any { point ->
+                            distanceFromPointToLineSegment(
+                                point.toOffset(),
+                                lineStart,
+                                lineEnd
+                            ) <= ERASER_RADIUS_10
+                        }
                     }
-                }
-                if (currentState.backActionBackStack.size > 0 && newLineList != currentState.backActionBackStack.last) {
-                    currentState.backActionBackStack.addLast(newLineList)
-                    if (currentState.backActionBackStack.size > MAX_HISTORY_SIZE) {
-                        currentState.copy(
-                            lineList = newLineList
-                        )
+                    if (currentState.backActionBackStack.size > 0 && newLineList != currentState.backActionBackStack.last) {
+                        currentState.backActionBackStack.addLast(newLineList)
+                        if (currentState.backActionBackStack.size > MAX_HISTORY_SIZE) {
+                            currentState.copy(
+                                lineList = newLineList
+                            )
+                        } else {
+                            currentState.copy(
+                                lineList = newLineList
+                            )
+                        }
                     } else {
                         currentState.copy(
                             lineList = newLineList
                         )
                     }
-                } else {
-                    currentState.copy(
-                        lineList = newLineList
-                    )
                 }
             }
         }
@@ -340,8 +350,6 @@ class MainViewModel @Inject constructor(
             frameListFirst.addAll(getFrameListUseCase(startIndex = startIndex))
             startIndex += frameListFirst.size - 1
 
-            Log.i(TAG, "start index = $startIndex frames count = $framesCount")
-
             if (startIndex == framesCount - 1) {
                 while (_state.value.isPlaying) {
                     for (frame in frameListFirst) {
@@ -370,7 +378,6 @@ class MainViewModel @Inject constructor(
                                     }
                             }
                         }
-                        Log.i(TAG, "start index = $startIndex")
                     }
 
                     frameListFirst.clear()
@@ -391,7 +398,6 @@ class MainViewModel @Inject constructor(
                                     }
                             }
                         }
-                        Log.i(TAG, "start index = $startIndex")
                     }
                     frameListSecond.clear()
                 }
@@ -452,7 +458,6 @@ class MainViewModel @Inject constructor(
         const val ERASER_RADIUS_10 = 10.0f
         const val MAX_HISTORY_SIZE = 256
         const val PAGGING_CALLBACK_SIZE = 1024
-        val TAG = MainViewModel::class.simpleName
     }
 }
 

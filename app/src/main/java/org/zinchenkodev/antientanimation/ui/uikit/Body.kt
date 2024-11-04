@@ -1,6 +1,5 @@
 package org.zinchenkodev.antientanimation.ui.uikit
 
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -40,7 +39,9 @@ fun Body(
                 detectDragGestures(
                     onDragStart = {},
                     onDragEnd = {
-                        onAction(Event.OnDragEnd)
+                        if (state.isPlaying.not()) {
+                            onAction(Event.OnDragEnd)
+                        }
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
@@ -103,7 +104,6 @@ fun Body(
                     contentScale = ContentScale.Crop
                 ),
         ) {
-            Log.i("BodyScreen", "state.lineList -> ${state.lineList}")
             state.lineList.forEach { line ->
                 drawLine(
                     color = line.color,

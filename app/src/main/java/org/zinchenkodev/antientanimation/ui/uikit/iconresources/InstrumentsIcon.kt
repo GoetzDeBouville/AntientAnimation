@@ -1,5 +1,7 @@
 package org.zinchenkodev.antientanimation.ui.uikit.iconresources
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
@@ -8,13 +10,18 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
+import org.zinchenkodev.antientanimation.ui.theme.Gray
 
-val InstrumentsIcon: ImageVector
-    get() {
-        if (_InstrumentsIc32 != null) {
-            return _InstrumentsIc32!!
+@Composable
+fun InstrumentsIcon(isActive: Boolean): ImageVector {
+    return remember(isActive) {
+        val color = if (isActive) {
+            Color(0xFFFFFFFF)
+        } else {
+            Gray
         }
-        _InstrumentsIc32 = ImageVector.Builder(
+
+        ImageVector.Builder(
             name = "InstrumentsIc32",
             defaultWidth = 33.dp,
             defaultHeight = 32.dp,
@@ -22,7 +29,7 @@ val InstrumentsIcon: ImageVector
             viewportHeight = 32f
         ).apply {
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
@@ -37,7 +44,7 @@ val InstrumentsIcon: ImageVector
                 horizontalLineTo(16.278f)
             }
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
@@ -57,7 +64,7 @@ val InstrumentsIcon: ImageVector
                 close()
             }
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
@@ -66,9 +73,5 @@ val InstrumentsIcon: ImageVector
                 lineTo(21.623f, 25.173f)
             }
         }.build()
-
-        return _InstrumentsIc32!!
     }
-
-@Suppress("ObjectPropertyName")
-private var _InstrumentsIc32: ImageVector? = null
+}

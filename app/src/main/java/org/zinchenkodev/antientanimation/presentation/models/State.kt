@@ -11,7 +11,8 @@ data class State(
     val strokeWidth: Dp = 4.dp,
     val strokeColor: Color = Color.Blue,
     val lineList: List<Line> = emptyList(),
-    val frameList: List<List<Line>> = emptyList(),
+    val previousFrame: List<Line> = emptyList(),
+    val framesNumber: Long = 0L,
     val selectedTool: Tool = Tool.Pen(),
     val backActionBackStack: Deque<List<Line>> = ArrayDeque(), // contains list of frames from history
     val forwardActionBackStack: Deque<List<Line>> = ArrayDeque(), // contains list of frames from history

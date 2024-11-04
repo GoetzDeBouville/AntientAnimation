@@ -6,6 +6,8 @@ import androidx.compose.ui.graphics.Color
 sealed interface Event {
     class OnToolClick(val tool: Tool) : Event
     class OnDrawLine(val start: Offset, val end: Offset, val color: Color) : Event
+    class OnDrawPoint(val start: Offset, val end: Offset, val color: Color) : Event
+    data object OnDragEnd : Event
     class OnEraseLine(val start: Offset, val end: Offset) : Event
     data object OnBackIconClicked : Event
     data object OnForwardIconClicked : Event

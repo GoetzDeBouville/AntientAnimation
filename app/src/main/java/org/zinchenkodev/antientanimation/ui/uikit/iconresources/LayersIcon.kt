@@ -1,5 +1,7 @@
 package org.zinchenkodev.antientanimation.ui.uikit.iconresources
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
@@ -8,13 +10,18 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
+import org.zinchenkodev.antientanimation.ui.theme.Gray
 
-val LayersIcon: ImageVector
-    get() {
-        if (_LayersIc32 != null) {
-            return _LayersIc32!!
+@Composable
+fun LayersIcon(isActive: Boolean): ImageVector {
+    return remember(isActive) {
+        val color = if (isActive) {
+            Color(0xFFFFFFFF)
+        } else {
+            Gray
         }
-        _LayersIc32 = ImageVector.Builder(
+
+        ImageVector.Builder(
             name = "LayersIc32",
             defaultWidth = 32.dp,
             defaultHeight = 33.dp,
@@ -22,7 +29,7 @@ val LayersIcon: ImageVector
             viewportHeight = 33f
         ).apply {
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
@@ -31,7 +38,7 @@ val LayersIcon: ImageVector
                 lineTo(15.987f, 28.75f)
             }
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
@@ -40,7 +47,7 @@ val LayersIcon: ImageVector
                 lineTo(4f, 23.39f)
             }
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
@@ -49,7 +56,7 @@ val LayersIcon: ImageVector
                 lineTo(15.987f, 22.11f)
             }
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
@@ -58,7 +65,7 @@ val LayersIcon: ImageVector
                 lineTo(4f, 16.75f)
             }
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
@@ -72,9 +79,5 @@ val LayersIcon: ImageVector
                 close()
             }
         }.build()
-
-        return _LayersIc32!!
     }
-
-@Suppress("ObjectPropertyName")
-private var _LayersIc32: ImageVector? = null
+}

@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -49,9 +47,9 @@ fun Footer(
             imageVector = PencilIcon(state.selectedTool is Tool.Pen),
             contentDescription = null
         )
-        Icon(
+        Image(
             modifier = Modifier.padding(horizontal = 16.dp),
-            imageVector = BrushIcon,
+            imageVector = BrushIcon(false),
             contentDescription = null
         )
 
@@ -61,9 +59,9 @@ fun Footer(
             imageVector = EraseIcon(state.selectedTool is Tool.Eraser),
             contentDescription = null
         )
-        Icon(
+        Image(
             modifier = Modifier.padding(horizontal = 16.dp),
-            imageVector = InstrumentsIcon,
+            imageVector = InstrumentsIcon(false),
             contentDescription = null
         )
         ColorPickerIconToggle(state = state, onAction = onAction)
@@ -83,7 +81,9 @@ private fun ColorPickerIconToggle(
             imageVector = ColorPickerIcon(showMenu, state.strokeColor),
             contentDescription = "Color Picker",
             modifier = Modifier.clickable {
-                showMenu = true
+                if (state.isPlaying.not()) {
+                    showMenu = true
+                }
             }
         )
         if (showMenu) {
@@ -93,7 +93,10 @@ private fun ColorPickerIconToggle(
             ) {
                 Row(
                     modifier = Modifier
-                        .background(Color.White.copy(alpha = 0.7f), shape = RoundedCornerShape(8.dp))
+                        .background(
+                            Color.White.copy(alpha = 0.7f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
                         .padding(8.dp)
                 ) {
                     colors.forEach { color ->

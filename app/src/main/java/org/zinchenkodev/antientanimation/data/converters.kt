@@ -16,5 +16,5 @@ fun Line.toEntity(): LineEntity = LineEntity(
 fun LineEntity.toDomain(): Line = Line(
     startDrawing = IntOffset(this.startX, this.startY),
     endDrawing = IntOffset(this.endX, this.endY),
-    color = Color(this.color)
+    color = Color(this.color.toULong())
 )

@@ -69,7 +69,7 @@ fun Header(
                     onAction(Event.OnPauseClicked)
                 }
         )
-        val isActivePlay = state.isPlaying.not() && state.frameList.size > 1
+        val isActivePlay = state.isPlaying.not() && state.framesNumber > 1
 
         Image(
             modifier = Modifier
@@ -113,8 +113,8 @@ private fun CentralElements(
                     }
                 }
         )
-        Icon(
-            imageVector = LayersIcon,
+        Image(
+            imageVector = LayersIcon(false),
             contentDescription = null
         )
     }

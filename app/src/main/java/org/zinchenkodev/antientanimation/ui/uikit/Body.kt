@@ -1,5 +1,6 @@
 package org.zinchenkodev.antientanimation.ui.uikit
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -38,7 +39,9 @@ fun Body(
             .pointerInput(state.selectedTool) {
                 detectDragGestures(
                     onDragStart = {},
-                    onDragEnd = {},
+                    onDragEnd = {
+                        onAction(Event.OnDragEnd)
+                    },
                     onDrag = { change, dragAmount ->
                         change.consume()
                         when (state.selectedTool) {
@@ -69,7 +72,7 @@ fun Body(
                     when (state.selectedTool) {
                         is Tool.Pen -> if (state.isPlaying.not()) {
                             onAction(
-                                Event.OnDrawLine(
+                                Event.OnDrawPoint(
                                     start = offset.copy(
                                         x = offset.x - (state.strokeWidth / 2).toPx(),
                                         y = offset.y
@@ -91,7 +94,6 @@ fun Body(
             },
         shape = RoundedCornerShape(20.dp)
     ) {
-        val previousFrameNumber = state.frameList.size - 1
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
@@ -101,6 +103,7 @@ fun Body(
                     contentScale = ContentScale.Crop
                 ),
         ) {
+            Log.i("BodyScreen", "state.lineList -> ${state.lineList}")
             state.lineList.forEach { line ->
                 drawLine(
                     color = line.color,
@@ -110,10 +113,10 @@ fun Body(
                 )
             }
 
-            if (previousFrameNumber >= 0 && state.isPlaying.not()) {
-                state.frameList[previousFrameNumber].forEach { line ->
+            if (state.previousFrame.isNotEmpty() && state.isPlaying.not()) {
+                state.previousFrame.forEach { line ->
                     drawLine(
-                        color = line.color.copy(0.1f),
+                        color = line.color.copy(0.2f),
                         start = line.startDrawing.toOffset(),
                         end = line.endDrawing.toOffset(),
                         strokeWidth = state.strokeWidth.toPx()

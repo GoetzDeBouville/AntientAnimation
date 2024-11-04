@@ -1,5 +1,7 @@
 package org.zinchenkodev.antientanimation.ui.uikit.iconresources
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
@@ -8,13 +10,17 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
+import org.zinchenkodev.antientanimation.ui.theme.Gray
 
-val BrushIcon: ImageVector
-    get() {
-        if (_BrushIc32 != null) {
-            return _BrushIc32!!
+@Composable
+fun BrushIcon(isActive: Boolean): ImageVector {
+    return remember(isActive) {
+        val color = if (isActive) {
+            Color(0xFFFFFFFF)
+        } else {
+            Gray
         }
-        _BrushIc32 = ImageVector.Builder(
+        ImageVector.Builder(
             name = "BrushIc32",
             defaultWidth = 33.dp,
             defaultHeight = 32.dp,
@@ -22,7 +28,7 @@ val BrushIcon: ImageVector
             viewportHeight = 32f
         ).apply {
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
@@ -41,7 +47,7 @@ val BrushIcon: ImageVector
                 close()
             }
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
@@ -50,7 +56,7 @@ val BrushIcon: ImageVector
                 lineTo(20.283f, 18.2f)
             }
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(color),
                 strokeLineWidth = 1.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
@@ -66,9 +72,5 @@ val BrushIcon: ImageVector
                 close()
             }
         }.build()
-
-        return _BrushIc32!!
     }
-
-@Suppress("ObjectPropertyName")
-private var _BrushIc32: ImageVector? = null
+}

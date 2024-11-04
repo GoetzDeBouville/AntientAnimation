@@ -1,5 +1,6 @@
 package org.zinchenkodev.antientanimation.presentation
 
+import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.toOffset
@@ -7,13 +8,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.zinchenkodev.antientanimation.presentation.models.Event
+import org.zinchenkodev.antientanimation.domain.ClearDbAndResetTableUseCase
+import org.zinchenkodev.antientanimation.domain.GetFrameListUseCase
+import org.zinchenkodev.antientanimation.domain.GetFramesCountUseCase
+import org.zinchenkodev.antientanimation.domain.SaveFrameUseCase
 import org.zinchenkodev.antientanimation.domain.models.Line
+import org.zinchenkodev.antientanimation.presentation.models.Event
 import org.zinchenkodev.antientanimation.presentation.models.State
 import org.zinchenkodev.antientanimation.presentation.models.Tool
 import java.util.ArrayDeque
@@ -22,10 +28,21 @@ import kotlin.math.abs
 import kotlin.math.sqrt
 
 @HiltViewModel
-class MainViewModel @Inject constructor() : ViewModel() {
+class MainViewModel @Inject constructor(
+    private val saveFrameUseCase: SaveFrameUseCase,
+    private val getFrameListUseCase: GetFrameListUseCase,
+    private val getFramesCountUseCase: GetFramesCountUseCase,
+    private val clearDbAndResetTableUseCase: ClearDbAndResetTableUseCase
+) : ViewModel() {
     private val _state = MutableStateFlow(State())
     val state
         get() = _state.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            clearDbAndResetTableUseCase()
+        }
+    }
 
     override fun onCleared() {
         super.onCleared()
@@ -36,11 +53,22 @@ class MainViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    @Suppress("t")
     fun accept(event: Event) {
         when (event) {
             is Event.OnDrawLine -> onDrawLine(event)
+            is Event.OnDrawPoint -> onDrawPoint(event)
             is Event.OnEraseLine -> onEraseLine(event)
+            is Event.OnDragEnd -> {
+                _state.update {
+                    it.copy(
+                        backActionBackStack = it.backActionBackStack.apply {
+                            addLast(it.lineList)
+                        },
+                        forwardActionBackStack = ArrayDeque()
+                    )
+                }
+            }
+
             is Event.OnBackIconClicked -> onBackIconClicked()
             is Event.OnForwardIconClicked -> onForwardIconClicked()
             is Event.OnToolClick -> onToolClick(event)
@@ -76,7 +104,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    private fun onDrawLine(event: Event.OnDrawLine) {
+    private fun onDrawPoint(event: Event.OnDrawPoint) {
         viewModelScope.launch(Dispatchers.Default) {
             _state.update { currentState ->
                 val currentLines = currentState.lineList.toMutableList()
@@ -112,6 +140,31 @@ class MainViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    private fun onDrawLine(event: Event.OnDrawLine) {
+        viewModelScope.launch(Dispatchers.Default) {
+            _state.update { currentState ->
+                val currentLines = currentState.lineList.toMutableList()
+                currentLines.add(
+                    Line(
+                        event.start.toIntOffset(),
+                        event.end.toIntOffset(),
+                        event.color
+                    )
+                )
+
+                if (currentState.backActionBackStack.size > MAX_HISTORY_SIZE) {
+                    currentState.copy(
+                        lineList = currentLines
+                    )
+                } else {
+                    currentState.copy(
+                        lineList = currentLines
+                    )
+                }
+            }
+        }
+    }
+
     private fun onEraseLine(event: Event.OnEraseLine) {
         viewModelScope.launch(Dispatchers.Default) {
             _state.update { currentState ->
@@ -133,29 +186,16 @@ class MainViewModel @Inject constructor() : ViewModel() {
                     currentState.backActionBackStack.addLast(newLineList)
                     if (currentState.backActionBackStack.size > MAX_HISTORY_SIZE) {
                         currentState.copy(
-                            lineList = newLineList,
-                            backActionBackStack = currentState.backActionBackStack.apply {
-                                removeFirst()
-                                addLast(newLineList)
-                            },
-                            forwardActionBackStack = ArrayDeque()
+                            lineList = newLineList
                         )
                     } else {
                         currentState.copy(
-                            lineList = newLineList,
-                            backActionBackStack = currentState.backActionBackStack.apply {
-                                addLast(
-                                    newLineList
-                                )
-                            },
-                            forwardActionBackStack = ArrayDeque()
+                            lineList = newLineList
                         )
                     }
                 } else {
                     currentState.copy(
-                        lineList = newLineList,
-                        backActionBackStack = currentState.backActionBackStack,
-                        forwardActionBackStack = ArrayDeque()
+                        lineList = newLineList
                     )
                 }
             }
@@ -164,29 +204,32 @@ class MainViewModel @Inject constructor() : ViewModel() {
 
     private fun onBackIconClicked() {
         _state.update { currentState ->
-            if (currentState.backActionBackStack.size > 1) {
-                val lastItemFrame = currentState.backActionBackStack.peekLast()
-                val updatedLines = currentState.backActionBackStack.removeLast()
-                currentState.copy(
-                    lineList = updatedLines,
-                    backActionBackStack = currentState.backActionBackStack,
-                    forwardActionBackStack = currentState.forwardActionBackStack.apply {
-                        addLast(lastItemFrame)
-                    }
-                )
+            if (currentState.backActionBackStack.isEmpty()) {
+                currentState
             } else {
-                val lastItemFrame = currentState.backActionBackStack.peekLast()
-                val updatedLines = currentState.backActionBackStack.removeLast()
-                currentState.copy(
-                    lineList = updatedLines,
-                    backActionBackStack = ArrayDeque(),
-                    forwardActionBackStack = currentState.forwardActionBackStack.apply {
-                        addLast(lastItemFrame)
-                    }
-                )
+                val lastItemFrame = currentState.backActionBackStack.removeLast()
+
+                if (currentState.backActionBackStack.isEmpty()) {
+                    currentState.copy(
+                        lineList = emptyList(),
+                        backActionBackStack = ArrayDeque(),
+                        forwardActionBackStack = currentState.forwardActionBackStack.apply {
+                            addLast(lastItemFrame)
+                        }
+                    )
+                } else {
+                    currentState.copy(
+                        lineList = currentState.backActionBackStack.peekLast(),
+                        backActionBackStack = currentState.backActionBackStack,
+                        forwardActionBackStack = currentState.forwardActionBackStack.apply {
+                            addLast(lastItemFrame)
+                        }
+                    )
+                }
             }
         }
     }
+
 
     private fun onForwardIconClicked() {
         _state.update { currentState ->
@@ -267,18 +310,21 @@ class MainViewModel @Inject constructor() : ViewModel() {
 
     private fun onCreateNewFrameClicked() {
         _state.update { currentState ->
-            val frameList = currentState.frameList.toMutableList()
-            frameList.add(currentState.lineList)
+            viewModelScope.launch(Dispatchers.IO) {
+                saveFrameUseCase(frame = currentState.lineList)
+            }
 
             currentState.copy(
                 backActionBackStack = ArrayDeque(),
                 forwardActionBackStack = ArrayDeque(),
+                previousFrame = currentState.lineList,
                 lineList = emptyList(),
-                frameList = frameList,
+                framesNumber = currentState.framesNumber + 1
             )
         }
     }
 
+    @Suppress("t")
     private fun onPlayClicked() {
         _state.update {
             it.copy(
@@ -287,17 +333,67 @@ class MainViewModel @Inject constructor() : ViewModel() {
         }
 
         viewModelScope.launch {
-            while (_state.value.isPlaying) {
-                for (frame in _state.value.frameList) {
-                    if (_state.value.isPlaying.not()) {
-                        break
+            val framesCount = getFramesCountUseCase()
+            var startIndex = 0L
+            val frameListFirst = mutableListOf<List<Line>>()
+            val frameListSecond = mutableListOf<List<Line>>()
+            frameListFirst.addAll(getFrameListUseCase(startIndex = startIndex))
+            startIndex += frameListFirst.size - 1
+
+            Log.i(TAG, "start index = $startIndex frames count = $framesCount")
+
+            if (startIndex == framesCount - 1) {
+                while (_state.value.isPlaying) {
+                    for (frame in frameListFirst) {
+                        if (!_state.value.isPlaying) break
+
+                        _state.update { it.copy(lineList = frame) }
+                        delay(200)
                     }
-                    _state.update {
-                        it.copy(
-                            lineList = frame
-                        )
+                }
+            } else {
+                while (_state.value.isPlaying) {
+                    for (i in 0 until frameListFirst.size) {
+                        if (!_state.value.isPlaying) break
+
+                        _state.update { it.copy(lineList = frameListFirst[i]) }
+                        delay(200)
+
+                        if (i + PAGGING_CALLBACK_SIZE == frameListFirst.size) {
+                            async(Dispatchers.IO) {
+                                frameListSecond.addAll(getFrameListUseCase(startIndex = startIndex))
+                                startIndex =
+                                    if (startIndex + frameListSecond.size <= framesCount - 1) {
+                                        startIndex + frameListSecond.size - 1
+                                    } else {
+                                        0L
+                                    }
+                            }
+                        }
+                        Log.i(TAG, "start index = $startIndex")
                     }
-                    delay(500)
+
+                    frameListFirst.clear()
+                    for (i in 0 until frameListSecond.size) {
+                        if (!_state.value.isPlaying) break
+
+                        _state.update { it.copy(lineList = frameListSecond[i]) }
+                        delay(200)
+
+                        if (i + PAGGING_CALLBACK_SIZE == frameListSecond.size) {
+                            async(Dispatchers.IO) {
+                                frameListFirst.addAll(getFrameListUseCase(startIndex = startIndex))
+                                startIndex =
+                                    if (startIndex + frameListFirst.size <= framesCount - 1) {
+                                        startIndex + frameListFirst.size - 1
+                                    } else {
+                                        0L
+                                    }
+                            }
+                        }
+                        Log.i(TAG, "start index = $startIndex")
+                    }
+                    frameListSecond.clear()
                 }
             }
         }
@@ -354,7 +450,9 @@ class MainViewModel @Inject constructor() : ViewModel() {
 
     private companion object {
         const val ERASER_RADIUS_10 = 10.0f
-        const val MAX_HISTORY_SIZE = 128
+        const val MAX_HISTORY_SIZE = 256
+        const val PAGGING_CALLBACK_SIZE = 1024
+        val TAG = MainViewModel::class.simpleName
     }
 }
 
